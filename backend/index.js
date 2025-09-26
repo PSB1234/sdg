@@ -1,70 +1,75 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
-const session = require('express-session');
-const passport = require('passport');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
-const connectDB = require('./config/database.js');
-const authRoutes = require('./routes/auth.js');
+const connectDB = require('./config/database');
+const auth = require('./routes/auth');
+const roleRoutes = require('./routes/roleRoutes');
+const userRoutes = require('./routes/userRoutes');
+const { getUserProfile } = require('./controllers/authController');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB database
+// Connect to database
 connectDB();
 
-// Security middleware to set HTTP headers appropriately
+// Security middleware
 app.use(helmet());
-
-// Enable Cross-Origin Resource Sharing for all routes
 app.use(cors());
 
-// Logging HTTP requests details in combined format
-app.use(morgan('combined'));
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
 
-// Parse incoming JSON requests with a size limit
+// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-// Setup session middleware — this must be BEFORE passport middleware
-app.use(session({
-  secret: process.env.SESSION_SECRET, // Secret key for signing session ID cookies
-  resave: false,                      // Prevent session resave if unmodified
-  saveUninitialized: false            // Only save sessions when modified
-}));
+// Trust proxy for accurate IP addresses
+app.set('trust proxy', 1);
 
-// Initialize Passport and use session support
-app.use(passport.initialize());
-app.use(passport.session());
+// Routes
+app.use('/api/auth', auth);
+app.use('/api/roles', roleRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/auth/profile', getUserProfile);
 
-// Configure Passport strategies, passing passport instance
-require('./config/passport')(passport);
-
-// Mount authentication routes at /api/auth
-app.use('/api/auth', authRoutes);
-
-// Health check endpoint for server status
+// Health check route
 app.get('/health', (req, res) => {
-  res.json({
-    message: 'Server is running',
-    timestamp: new Date().toISOString()
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Catch-all 404 handler for unmatched routes using regex pattern
-app.use(/.*/, (req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+// 404 handler
+app.use('/*catchAll', (req, res) => {
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.originalUrl
+  });
 });
 
-// Central error handling middleware
+// Global error handler 
 app.use((err, req, res, next) => {
-  console.error(err.stack);  // Log stack trace on server
-  res.status(500).json({ message: 'Something went wrong!' });
+  console.error('Global error:', err);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
-// Start server and listen on configured port
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
+  // FIX APPLIED: Changed parentheses to backticks (`) for the template literal
   console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
 });
+
+module.exports = app;

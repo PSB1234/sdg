@@ -1,51 +1,27 @@
 const express = require('express');
-const passport = require('passport');
+const router = express.Router();
 const {
   registerUser,
   loginUser,
   refreshAccessToken,
   logoutUser,
+  logoutAllDevices,
   getUserProfile,
   updateUserProfile,
-  generateTokens, 
-  changePassword,
-} = require('../controllers/authController.js');
-const { authenticateToken } = require('../middleware/auth.js');
-
-const router = express.Router();
+  changePassword
+} = require('../controllers/authController');
+const { authenticateToken } = require('../middleware/auth');
 
 // Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/refresh-token', refreshAccessToken);
-router.post('/change-password', authenticateToken, changePassword);
-
+router.post('/refresh', refreshAccessToken);
 
 // Protected routes
 router.post('/logout', authenticateToken, logoutUser);
+router.post('/logout-all', authenticateToken, logoutAllDevices);
 router.get('/profile', authenticateToken, getUserProfile);
 router.put('/profile', authenticateToken, updateUserProfile);
-
-router.get('/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
-
-// Google callback
-router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: '/' }),
-  async (req, res) => {
-    const { accessToken, refreshToken } = generateTokens(req.user._id);
-    const user = req.user;
-    user.refreshTokens.push({ token: refreshToken });
-    await user.save();
-
-    res.json({
-      message: 'Logged in with Google!',
-      user: { id: user._id, name: user.name, email: user.email, age: user.age },
-      accessToken,
-      refreshToken,
-    });
-  }
-);
+router.post('/change-password', authenticateToken, changePassword);
 
 module.exports = router;
