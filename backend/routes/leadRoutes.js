@@ -12,7 +12,8 @@ const {
   updateLeadStatus,
   addComment,
   addInteraction,
-  getAIRecommendations
+  getAIRecommendations,
+  sendNotification
 } = require('../controllers/leadController');
 const { authenticateToken, requirePermission } = require('../middleware/auth');
 
@@ -29,5 +30,6 @@ router.patch('/:id/status', requirePermission('lead:update_status'), updateLeadS
 router.post('/:id/comments', requirePermission('lead:add_comment'), addComment);
 router.post('/:id/interactions', requirePermission('lead:write'), addInteraction);
 router.get('/:id/ai-recommendations', requirePermission('lead:read'), getAIRecommendations);
+router.post('/:id/notifications', requirePermission('lead:write'), sendNotification);
 
 module.exports = router;

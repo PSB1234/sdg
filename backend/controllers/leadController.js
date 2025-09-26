@@ -261,6 +261,33 @@ const getAIRecommendations = async (req, res) => {
   }
 };
 
+// Update controllers/leadController.js for notifications
+// Add new function
+const sendNotification = async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ message: 'Message required' });
+
+    const lead = await Lead.findById(req.params.id);
+    if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    // Check if user can send (manager assigned or superadmin)
+    if (!await req.user.hasRole(['SUPERADMIN']) && !lead.assignedTo.equals(req.user._id)) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    lead.notifications.push({ message, createdBy: req.user._id });
+    await lead.save();
+
+    res.json({ message: 'Notification sent', notification: lead.notifications[lead.notifications.length - 1] });
+  } catch (error) {
+    console.error('Send notification error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Add to module.exports: sendNotification
+
 module.exports = {
   getMyLeads,
   getAllLeads,
@@ -272,5 +299,6 @@ module.exports = {
   updateLeadStatus,
   addComment,
   addInteraction,
-  getAIRecommendations
+  getAIRecommendations,
+  sendNotification
 };

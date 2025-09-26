@@ -43,6 +43,7 @@ app.use('/api/auth/profile', getUserProfile);
 app.use('/api/leads', require('./routes/leadRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/customer', require('./routes/customerRoutes'));
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -70,7 +71,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   // FIX APPLIED: Changed parentheses to backticks (`) for the template literal
   console.log(`Server running on port ${PORT}`);
