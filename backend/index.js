@@ -40,6 +40,10 @@ app.use('/api/roles', roleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth/profile', getUserProfile);
 
+app.use('/api/leads', require('./routes/leadRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
+
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ 

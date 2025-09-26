@@ -10,7 +10,9 @@ const DEFAULT_ROLES = {
     permissions: [
       'user:read', 'user:write', 'user:delete',
       'role:read', 'role:write', 'role:delete',
-      'system:read', 'system:write'
+      'system:read', 'system:write', 'lead:read', 'lead:write', 'lead:delete', 'lead:assign', 'lead:update_status', 'lead:add_comment',
+    'task:read', 'task:write', 'task:delete',
+    'report:read', 'report:export'
     ]
   },
   MANAGER: {
@@ -20,7 +22,8 @@ const DEFAULT_ROLES = {
       'user:read', 'user:write',
       'role:read',
       'system:read',
-      'report:read', 'report:write'
+      'report:read', 'report:write', 'lead:read', 'lead:write', 'lead:update_status', 'lead:add_comment',
+    'task:read', 'task:write'
     ]
   },
   USER: {
@@ -67,7 +70,23 @@ const PERMISSIONS = {
   
   // Report permissions
   'report:read': 'View reports',
-  'report:write': 'Create reports'
+  'report:write': 'Create reports',
+
+  'lead:read': 'View leads',
+  'lead:write': 'Create and update leads',
+  'lead:delete': 'Delete leads',
+  'lead:assign': 'Assign or reassign leads',
+  'lead:update_status': 'Update lead status',
+  'lead:add_comment': 'Add comments to leads',
+  
+  // Task permissions
+  'task:read': 'View tasks',
+  'task:write': 'Create and update tasks',
+  'task:delete': 'Delete tasks',
+  
+  // Report permissions
+  'report:read': 'View reports',
+  'report:export': 'Export reports'
 };
 
 module.exports = {
