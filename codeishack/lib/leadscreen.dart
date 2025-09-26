@@ -70,116 +70,118 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: CustomScrollView(
-        slivers: [
-          // Modern App Bar with gradient
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2),
-                  ],
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // Modern App Bar with gradient
+            SliverAppBar(
+              expandedHeight: 120,
+              floating: false,
+              pinned: true,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF667eea),
+                      Color(0xFF764ba2),
+                    ],
+                  ),
+                ),
+                child: FlexibleSpaceBar(
+                  title: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: const Text(
+                      'My Applications',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 24,
+                      ),
+                    ),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
                 ),
               ),
-              child: FlexibleSpaceBar(
-                title: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: const Text(
-                    'My Applications',
-                    style: TextStyle(
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 16, top: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+            ),
+        
+            // Stats Overview Card
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
                       color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 24,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatItem('Total', '${leads.length}', Icons.apps, const Color(0xFF667eea)),
+                        _buildStatItem('Active', '2', Icons.trending_up, const Color(0xFF4CAF50)),
+                        _buildStatItem('Pending', '1', Icons.access_time, const Color(0xFFFF9800)),
+                      ],
                     ),
                   ),
                 ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 16, bottom: 16),
               ),
             ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 16, top: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                  onPressed: () {},
-                ),
-              ),
-            ],
-          ),
-
-          // Stats Overview Card
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildStatItem('Total', '${leads.length}', Icons.apps, const Color(0xFF667eea)),
-                      _buildStatItem('Active', '2', Icons.trending_up, const Color(0xFF4CAF50)),
-                      _buildStatItem('Pending', '1', Icons.access_time, const Color(0xFFFF9800)),
-                    ],
-                  ),
-                ),
+        
+            // Applications List
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: Offset(0, 0.3 + (index * 0.1)),
+                        end: Offset.zero,
+                      ).animate(CurvedAnimation(
+                        parent: _controller,
+                        curve: Interval(
+                          (index * 0.1).clamp(0.0, 1.0),
+                          1.0,
+                          curve: Curves.easeOut,
+                        ),
+                      )),
+                      child: _buildLeadCard(context, leads[index], index),
+                    ),
+                  );
+                },
+                childCount: leads.length,
               ),
             ),
-          ),
-
-          // Applications List
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: Offset(0, 0.3 + (index * 0.1)),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: _controller,
-                      curve: Interval(
-                        (index * 0.1).clamp(0.0, 1.0),
-                        1.0,
-                        curve: Curves.easeOut,
-                      ),
-                    )),
-                    child: _buildLeadCard(context, leads[index], index),
-                  ),
-                );
-              },
-              childCount: leads.length,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FadeTransition(
         opacity: _fadeAnimation,
