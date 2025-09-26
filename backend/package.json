@@ -17,17 +17,24 @@
     "license": "ISC",
     "packageManager": "pnpm@10.15.1",
     "dependencies": {
+        "@clerk/express": "^1.7.33",
+        "@prisma/client": "^6.16.2",
         "@types/express": "^5.0.3",
+        "cors": "^2.8.5",
+        "dotenv": "^17.2.2",
         "express": "^5.1.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.36.0",
+        "@types/cors": "^2.8.19",
         "@types/node": "^24.5.2",
         "eslint": "^9.36.0",
         "nodemon": "^3.1.10",
         "prettier": "^3.6.2",
+        "prisma": "^6.16.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.44.1"
-    }
+    },
+    "type": "module"
 }
