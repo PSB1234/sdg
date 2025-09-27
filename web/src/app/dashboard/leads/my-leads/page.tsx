@@ -10,6 +10,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 type LeadItem = {
   _id: string;
@@ -52,6 +63,9 @@ export default function MyLeadsPage() {
   const [data, setData] = React.useState<LeadItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [selectedLead, setSelectedLead] = React.useState<LeadItem | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+  const [updating, setUpdating] = React.useState(false);
 
   const load = React.useCallback(async () => {
     try {
@@ -89,6 +103,46 @@ export default function MyLeadsPage() {
     void load();
   }, [load]);
 
+  const handleUpdateLead = async (
+    leadId: string,
+    updates: Partial<LeadItem>,
+  ) => {
+    try {
+      setUpdating(true);
+      const token =
+        typeof window !== "undefined"
+          ? (localStorage.getItem("token") ?? localStorage.getItem("authToken"))
+          : null;
+
+      const res = await fetch(`${API_BASE}/leads/${leadId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to update lead: ${res.statusText}`);
+      }
+
+      toast.success("Lead updated successfully!");
+      setDialogOpen(false);
+      void load(); // Refresh the data
+    } catch (error) {
+      console.error("Update error:", error);
+      toast.error("Failed to update lead");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const openUpdateDialog = (lead: LeadItem) => {
+    setSelectedLead(lead);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="rounded-xl border p-6">
       <div className="mb-4 flex items-center justify-between gap-2">
@@ -100,6 +154,102 @@ export default function MyLeadsPage() {
       {error ? (
         <div className="text-destructive mb-4 text-sm">{error}</div>
       ) : null}
+
+      {/* Update Lead Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Update Lead</DialogTitle>
+            <DialogDescription>
+              Make changes to the lead details. Click save when you&apos;re
+              done.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedLead && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="status" className="text-right">
+                  Status
+                </Label>
+                <select
+                  id="status"
+                  className="border-input bg-background focus:ring-ring col-span-3 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                  defaultValue={selectedLead.status}
+                  onChange={(e) => {
+                    if (selectedLead) {
+                      setSelectedLead({
+                        ...selectedLead,
+                        status: e.target.value as LeadItem["status"],
+                      });
+                    }
+                  }}
+                >
+                  <option value="New">New</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Converted">Converted</option>
+                  <option value="Dropped">Dropped</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="priority" className="text-right">
+                  Priority
+                </Label>
+                <Input
+                  id="priority"
+                  type="number"
+                  min="0"
+                  max="100"
+                  className="col-span-3"
+                  defaultValue={selectedLead.priorityScore}
+                  onChange={(e) => {
+                    if (selectedLead) {
+                      setSelectedLead({
+                        ...selectedLead,
+                        priorityScore: Number(e.target.value) || 0,
+                      });
+                    }
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="zone" className="text-right">
+                  Zone
+                </Label>
+                <Input
+                  id="zone"
+                  className="col-span-3"
+                  defaultValue={selectedLead.zone ?? ""}
+                  onChange={(e) => {
+                    if (selectedLead) {
+                      setSelectedLead({
+                        ...selectedLead,
+                        zone: e.target.value,
+                      });
+                    }
+                  }}
+                />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() =>
+                    handleUpdateLead(selectedLead._id, {
+                      status: selectedLead.status,
+                      priorityScore: selectedLead.priorityScore,
+                      zone: selectedLead.zone,
+                    })
+                  }
+                  disabled={updating}
+                >
+                  {updating ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       <Table>
         <TableCaption>Leads currently assigned to you.</TableCaption>
         <TableHeader>
@@ -162,12 +312,9 @@ export default function MyLeadsPage() {
                     : "—"}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="outline">
-                      View
-                    </Button>
-                    <Button size="sm">Update</Button>
-                  </div>
+                  <Button size="sm" onClick={() => openUpdateDialog(lead)}>
+                    Update
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

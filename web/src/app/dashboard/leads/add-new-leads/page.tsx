@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +14,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Popover,
@@ -27,8 +35,24 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  IconUser,
+  IconMail,
+  IconPhone,
+  IconHome,
+  IconCreditCard,
+  IconId,
+  IconCurrency,
+  IconChartBar,
+  IconCurrencyRupee,
+  IconPlus,
+  IconLoader2,
+  IconCheck,
+} from "@tabler/icons-react";
 
 export default function LeadForm() {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const formSchema = z.object({
     name: z.string().min(1, "Name is required"),
     email: z.string().email("Please enter a valid email"),
@@ -76,6 +100,7 @@ export default function LeadForm() {
     const API_BASE =
       process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080/api";
 
+    setIsSubmitting(true);
     try {
       const validatedData = formSchema.parse(values);
 
@@ -104,241 +129,389 @@ export default function LeadForm() {
           .catch(() => ({ message: "form failed" }))) as { message?: string };
         throw new Error(errorData.message ?? "form error");
       }
-      toast("Form submitted");
+      toast.success("Lead created successfully!");
+      form.reset();
     } catch (error) {
       console.error("Form submission error", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create lead",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="mx-auto max-w-3xl space-y-8 py-10"
-      >
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Harsh" type="text" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div className="mx-auto max-w-4xl space-y-6">
+      {/* Header */}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Create New Lead</h1>
+        <p className="text-muted-foreground">
+          Fill in the customer details to create a new lead in the system.
+        </p>
+      </div>
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>E-mail</FormLabel>
-              <FormControl>
-                <Input placeholder="harsh@email.com" type="email" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="phoneNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Phone Number</FormLabel>
-              <FormControl>
-                <Input placeholder="98xxxxxxxx" type="tel" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="productType"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Type</FormLabel>
-              <FormControl>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                    >
-                      {field.value || "Select product type..."}
-                      <span className="opacity-50">⌄</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[260px] p-0">
-                    <Command>
-                      <CommandInput
-                        placeholder="Search product type..."
-                        className="h-9"
-                      />
-                      <CommandList>
-                        <CommandEmpty>No product found.</CommandEmpty>
-                        <CommandGroup>
-                          {[
-                            "Home Loan",
-                            "Car Loan",
-                            "Credit Card",
-                            "Personal Loan",
-                            "Business Loan",
-                          ].map((opt) => (
-                            <CommandItem
-                              key={opt}
-                              value={opt}
-                              onSelect={(currentValue) => {
-                                field.onChange(currentValue);
-                              }}
-                            >
-                              {opt}
-                              <span
-                                className={`ml-auto ${
-                                  field.value === opt
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                }`}
-                              >
-                                ✓
-                              </span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="address"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Address</FormLabel>
-              <FormControl>
-                <Input placeholder="123, Main Street" type="text" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="existingRelationship"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Existing Relationship</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Accounts, past loans"
-                  type="text"
-                  {...field}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Personal Information Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconUser className="h-5 w-5" />
+                Personal Information
+              </CardTitle>
+              <CardDescription>
+                Basic customer details and contact information
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconUser className="h-4 w-4" />
+                        Full Name *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter customer's full name"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <FormField
-          control={form.control}
-          name="aadharCard"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Aadhar Card</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="123412341234"
-                  type="text"
-                  maxLength={12}
-                  {...field}
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconMail className="h-4 w-4" />
+                        Email Address *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="customer@example.com"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              </div>
 
-        <FormField
-          control={form.control}
-          name="loanAmount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Loan Amount</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="500000"
-                  type="number"
-                  min="1"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value) || 0)}
-                  value={field.value || ""}
+              <div className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconPhone className="h-4 w-4" />
+                        Phone Number *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="+91 98XXXXXXXX"
+                          type="tel"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <FormField
-          control={form.control}
-          name="creditScore"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Credit Score</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="750"
-                  type="number"
-                  min="300"
-                  max="850"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value) || 0)}
-                  value={field.value || ""}
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconHome className="h-4 w-4" />
+                        Address
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Complete address"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Optional: Complete residential address
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+              </div>
 
-        <FormField
-          control={form.control}
-          name="annualIncome"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Annual Income</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="1000000"
-                  type="number"
-                  min="1"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value) || 0)}
-                  value={field.value || ""}
+              <div className="grid gap-6 md:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="existingRelationship"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconCreditCard className="h-4 w-4" />
+                        Existing Relationship
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Current accounts, past loans, etc."
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Any existing banking relationship
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
 
-        <Button type="submit">Submit</Button>
-      </form>
-    </Form>
+                <FormField
+                  control={form.control}
+                  name="aadharCard"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconId className="h-4 w-4" />
+                        Aadhar Card
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="XXXX XXXX XXXX"
+                          type="text"
+                          maxLength={12}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        12-digit Aadhar number (optional)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Product Information Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <IconCreditCard className="h-5 w-5" />
+                Product Information
+              </CardTitle>
+              <CardDescription>
+                Loan details and product requirements
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <FormField
+                control={form.control}
+                name="productType"
+                render={({ field }) => (
+                  <FormItem className="max-w-md">
+                    <FormLabel className="flex items-center gap-2">
+                      <IconCreditCard className="h-4 w-4" />
+                      Product Type *
+                    </FormLabel>
+                    <FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            role="combobox"
+                            className="w-full justify-between"
+                          >
+                            {field.value || "Select product type..."}
+                            <span className="opacity-50">⌄</span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search product type..."
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>No product found.</CommandEmpty>
+                              <CommandGroup>
+                                {[
+                                  "Home Loan",
+                                  "Car Loan",
+                                  "Credit Card",
+                                  "Personal Loan",
+                                  "Business Loan",
+                                ].map((opt) => (
+                                  <CommandItem
+                                    key={opt}
+                                    value={opt}
+                                    onSelect={(currentValue) => {
+                                      field.onChange(currentValue);
+                                    }}
+                                  >
+                                    {opt}
+                                    <IconCheck
+                                      className={`ml-auto h-4 w-4 ${
+                                        field.value === opt
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      }`}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </FormControl>
+                    <FormDescription>
+                      Select the banking product customer is interested in
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <FormField
+                  control={form.control}
+                  name="loanAmount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconCurrencyRupee className="h-4 w-4" />
+                        Loan Amount *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="5,00,000"
+                          type="number"
+                          min="1"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription>Amount in Indian Rupees</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="creditScore"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconChartBar className="h-4 w-4" />
+                        Credit Score *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="750"
+                          type="number"
+                          min="300"
+                          max="850"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription>Range: 300-850</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="annualIncome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <IconCurrency className="h-4 w-4" />
+                        Annual Income *
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="10,00,000"
+                          type="number"
+                          min="1"
+                          {...field}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || 0)
+                          }
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Gross annual income in INR
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Submit Button */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => form.reset()}
+                  disabled={isSubmitting}
+                >
+                  Reset Form
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="min-w-[120px]"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <IconLoader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <IconPlus className="mr-2 h-4 w-4" />
+                      Create Lead
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+    </div>
   );
 }
