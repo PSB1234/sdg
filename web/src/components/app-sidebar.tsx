@@ -190,10 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <div>
-                <Link
-                  href="/dashboard/leads"
-                  className="flex items-center gap-2"
-                >
+                <Link href="/dashboard" className="flex items-center gap-2">
                   <Image
                     src="/favicon.ico"
                     width={30}

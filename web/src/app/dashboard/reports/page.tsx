@@ -13,6 +13,7 @@ import {
   IconDownload,
   IconEye,
   IconRefresh,
+  IconFileSpreadsheet,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import html2pdf from "html2pdf.js";
@@ -240,6 +241,74 @@ export default function ReportsPage() {
     }
   }, [pdfUrl, leads]);
 
+  const exportToExcel = React.useCallback(() => {
+    try {
+      if (leads.length === 0) {
+        toast.error("No data available to export");
+        return;
+      }
+
+      // Create CSV content
+      const headers = [
+        "Lead ID",
+        "Customer Name",
+        "Email",
+        "Phone Number",
+        "Product Type",
+        "Status",
+        "Priority Score",
+        "Credit Score",
+        "Loan Amount (₹)",
+        "Annual Income (₹)",
+        "Assigned To",
+        "Last Updated",
+      ];
+
+      const csvContent = [
+        headers.join(","),
+        ...leads.map((lead) =>
+          [
+            lead._id.slice(0, 8),
+            `"${lead.customerName}"`,
+            lead.email ?? "—",
+            lead.phoneNumber ?? "—",
+            `"${lead.productType}"`,
+            lead.status,
+            lead.priorityScore,
+            lead.creditScore ?? "—",
+            lead.loanAmount ?? "—",
+            lead.annualIncome ?? "—",
+            lead.assignedTo?.name ?? "—",
+            lead.lastUpdated
+              ? new Date(lead.lastUpdated).toLocaleDateString()
+              : "—",
+          ].join(","),
+        ),
+      ].join("\n");
+
+      // Create and download CSV file
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `my-leads-report-${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success("Excel report downloaded successfully!");
+    } catch (error) {
+      console.error("Failed to export to Excel:", error);
+      toast.error("Failed to export to Excel");
+    }
+  }, [leads]);
+
   React.useEffect(() => {
     void fetchMyLeads();
   }, [fetchMyLeads]);
@@ -297,7 +366,7 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-wrap gap-3 pt-4">
             <Button
               onClick={generatePDF}
               disabled={generatingPdf || leads.length === 0}
@@ -305,6 +374,16 @@ export default function ReportsPage() {
             >
               <IconFileTypePdf className="h-4 w-4" />
               {generatingPdf ? "Generating..." : "Generate PDF Report"}
+            </Button>
+
+            <Button
+              onClick={exportToExcel}
+              disabled={leads.length === 0}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <IconFileSpreadsheet className="h-4 w-4" />
+              Export to Excel
             </Button>
 
             {pdfUrl && (
@@ -379,8 +458,13 @@ export default function ReportsPage() {
               information from your assigned leads
             </li>
             <li>
-              • <strong>Export Options:</strong> Download as HTML file or print
-              directly from browser
+              • <strong>Multiple Export Formats:</strong> Download as PDF for
+              presentations or CSV/Excel for data analysis
+            </li>
+            <li>
+              • <strong>Excel Compatibility:</strong> CSV format opens directly
+              in Microsoft Excel, Google Sheets, and other spreadsheet
+              applications
             </li>
           </ul>
         </CardContent>
