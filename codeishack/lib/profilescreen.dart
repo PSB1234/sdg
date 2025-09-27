@@ -11,6 +11,11 @@ class ApiService {
     return prefs.getString('accessToken');
   }
 
+  static Future<String?> _getRefreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('refreshToken');
+  }
+
   static Map<String, String> _getHeaders(String accessToken) {
     return {
       'Authorization': 'Bearer $accessToken',
@@ -57,6 +62,45 @@ class ApiService {
       return response.statusCode == 200;
     } catch (e) {
       print('Error updating user profile: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> logout() async {
+    try {
+      final accessToken = await _getAccessToken();
+      final refreshToken = await _getRefreshToken();
+
+      if (accessToken == null || refreshToken == null) {
+        throw Exception('Tokens not found');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: _getHeaders(accessToken),
+        body: json.encode({
+          'refreshToken': refreshToken,
+        }),
+      );
+
+      // Clear tokens from SharedPreferences regardless of API response
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('accessToken');
+      await prefs.remove('refreshToken');
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error during logout: $e');
+
+      // Even if API call fails, clear local tokens
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('accessToken');
+        await prefs.remove('refreshToken');
+      } catch (prefError) {
+        print('Error clearing preferences: $prefError');
+      }
+
       return false;
     }
   }
@@ -974,9 +1018,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: const Text('Cancel'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.pop(context);
-                Navigator.pushNamedAndRemoveUntil(context, '/auth', (_) => false);
+
+                // Show loading
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  },
+                );
+
+                try {
+                  final success = await ApiService.logout();
+
+                  // Hide loading
+                  Navigator.pop(context);
+
+                  _showSuccessSnackBar('Logged out successfully');
+
+                  // Navigate to auth screen regardless of API response
+                  Navigator.pushNamedAndRemoveUntil(context, '/auth', (_) => false);
+
+                } catch (e) {
+                  // Hide loading
+                  Navigator.pop(context);
+
+                  _showSuccessSnackBar('Logged out successfully');
+
+                  // Navigate to auth screen even on error
+                  Navigator.pushNamedAndRemoveUntil(context, '/auth', (_) => false);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFDC2626),

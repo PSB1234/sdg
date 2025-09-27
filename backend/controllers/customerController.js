@@ -7,17 +7,7 @@ const crypto = require('crypto');
 const submitLead = async (req, res) => {
   try {
     const {
-      name, email, phoneNumber, productType, address,
-      existingRelationship, aadharCard, loanAmount,
-      creditScore, annualIncome
-    } = req.body;
-
-    if (!name || !email || !phoneNumber || !productType || !loanAmount || !creditScore || !annualIncome) {
-      return res.status(400).json({ message: 'Required fields missing' });
-    }
-
-    const lead = new Lead({
-      customerName: name,
+      name,
       email,
       phoneNumber,
       productType,
@@ -26,19 +16,36 @@ const submitLead = async (req, res) => {
       aadharCard,
       loanAmount,
       creditScore,
-      annualIncome,
+      annualIncome
+    } = req.body;
+
+    if (!name || !email || !phoneNumber || !productType) {
+      return res.status(400).json({ message: 'Required fields missing' });
+    }
+
+    const lead = new Lead({
+      customerName: name,
+      email,
+      phoneNumber,
+      productType,
+      address: address || '',
+      existingRelationship: existingRelationship || '',
+      aadharCard: aadharCard || '',
+      loanAmount: loanAmount || 0,
+      creditScore: creditScore || 0,
+      annualIncome: annualIncome || 0,
       status: 'New',
-      priorityScore: 0
+      priorityScore: 50
     });
 
     await lead.save();
 
-    // Set a timeout for Gemini API call (e.g., 5 seconds)
+    // Gemini AI call to assign priority
     const timeoutPromise = new Promise((resolve) => {
       setTimeout(() => resolve({ priority: 'medium', score: 50 }), 5000);
     });
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     const prompt = `
 Analyze this loan request and assign a priority level (high, medium, low) with a score (0-100):
 - Product Type: ${productType}
@@ -54,8 +61,9 @@ Rules:
 - High priority (80-100): Credit score >700, income >2x loan amount, existing relationship.
 - Medium priority (40-79): Credit score 600-700, income ~1-2x loan amount.
 - Low priority (0-39): Credit score <600 or income <loan amount.
-Return JSON: { "priority": "high|medium|low", "score": number }
+Return JSON only: { "priority": "high|medium|low", "score": number }
 `;
+
     const apiPromise = model.generateContent(prompt).then(result => {
       const responseText = result.response.text();
       try {
@@ -66,9 +74,10 @@ Return JSON: { "priority": "high|medium|low", "score": number }
       }
     });
 
-    // Race between API call and timeout
+    // Race between Gemini API and 5s timeout
     const aiPriority = await Promise.race([apiPromise, timeoutPromise]);
 
+    // Convert AI priority to score
     let score;
     if (aiPriority.priority === 'high') score = 80 + Math.floor(Math.random() * 20);
     else if (aiPriority.priority === 'medium') score = 40 + Math.floor(Math.random() * 40);
@@ -81,8 +90,9 @@ Return JSON: { "priority": "high|medium|low", "score": number }
       message: 'Lead submitted successfully',
       trackingToken: lead.trackingToken,
       leadId: lead._id,
-      priorityScore: score // Include score for verification
+      priorityScore: score
     });
+
   } catch (error) {
     console.error('Submit lead error:', error);
     res.status(500).json({ message: 'Server error' });

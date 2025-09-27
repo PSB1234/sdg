@@ -1,4 +1,120 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ApiService {
+  static const String baseUrl = 'http://10.247.14.235:8080/api';
+
+  static Future<String?> _getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('accessToken');
+  }
+
+  static Map<String, String> _getHeaders(String accessToken) {
+    return {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+  }
+
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final accessToken = await _getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: _getHeaders(accessToken),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user profile: $e');
+      return null;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getLeads(String email) async {
+    try {
+      final accessToken = await _getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/customer/leads?email=$email'),
+        headers: _getHeaders(accessToken),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+
+        // Server response ke andar "leads" field hai
+        final List<dynamic> leadsData = body['leads'] ?? [];
+
+        return leadsData.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to load leads: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching leads: $e');
+      return [];
+    }
+  }
+}
+
+class UserProfile {
+  final String id;
+  final String name;
+  final String email;
+  final int age;
+  final List<String> roles;
+  final bool isActive;
+  final bool isEmailVerified;
+  final int loginAttempts;
+  final String createdAt;
+  final String updatedAt;
+  final List<String> permissions;
+
+  UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.age,
+    required this.roles,
+    required this.isActive,
+    required this.isEmailVerified,
+    required this.loginAttempts,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.permissions,
+  });
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    return UserProfile(
+      id: user['_id'],
+      name: user['name'],
+      email: user['email'],
+      age: user['age'],
+      roles: List<String>.from(user['roles']),
+      isActive: user['isActive'],
+      isEmailVerified: user['isEmailVerified'],
+      loginAttempts: user['loginAttempts'],
+      createdAt: user['createdAt'],
+      updatedAt: user['updatedAt'],
+      permissions: List<String>.from(user['permissions']),
+    );
+  }
+}
+
 class TrackLeadsScreen extends StatefulWidget {
   const TrackLeadsScreen({super.key});
 
@@ -11,6 +127,9 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  List<Map<String, dynamic>> leads = [];
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -27,7 +146,55 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
+    _fetchLeads();
     _controller.forward();
+  }
+
+  Future<void> _fetchLeads() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final profileData = await ApiService.getUserProfile();
+      if (profileData != null) {
+        final userProfile = UserProfile.fromJson(profileData);
+        final fetchedLeads = await ApiService.getLeads(userProfile.email);
+        if (fetchedLeads.isNotEmpty) {
+          setState(() {
+            leads = fetchedLeads.map((lead) {
+              return {
+                'leadId': lead['leadId'] ?? '',
+                'customerName': lead['customerName'] ?? 'Unknown',
+                'productType': lead['productType'] ?? 'Unknown Product',
+                'status': lead['status'] ?? 'New',
+                'priorityScore': lead['priorityScore'] ?? 0,
+                'lastUpdated': lead['lastUpdated'] ?? DateTime.now().toString(),
+                'trackingToken': lead['trackingToken'] ?? '',
+                'icon': _getIconForProduct(lead['productType']),
+              };
+            }).toList();
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            errorMessage = 'No leads found for this user';
+          });
+        }
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Failed to load user profile';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching data: $e';
+      });
+    }
   }
 
   @override
@@ -36,34 +203,30 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
     super.dispose();
   }
 
+  IconData _getIconForProduct(String? product) {
+    switch (product) {
+      case 'Home Loan':
+        return Icons.home_outlined;
+      case 'Car Loan':
+        return Icons.directions_car_outlined;
+      case 'Credit Card':
+        return Icons.credit_card_outlined;
+      case 'Personal Loan':
+        return Icons.person_outline;
+      case 'Business Loan':
+        return Icons.business_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final leads = [
-      {
-        'product': 'Home Loan',
-        'status': 'Assigned',
-        'priority': 'High',
-        'amount': '₹25,00,000',
-        'date': '15 Sep 2025',
-        'icon': Icons.home_outlined,
-      },
-      {
-        'product': 'Car Loan',
-        'status': 'Under Review',
-        'priority': 'Medium',
-        'amount': '₹8,50,000',
-        'date': '20 Sep 2025',
-        'icon': Icons.directions_car_outlined,
-      },
-      {
-        'product': 'Credit Card',
-        'status': 'New',
-        'priority': 'Low',
-        'amount': '₹2,00,000',
-        'date': '24 Sep 2025',
-        'icon': Icons.credit_card_outlined,
-      },
-    ];
+    // Count active leads (including 'New' status as active)
+    int activeCount = leads.where((lead) =>
+    lead['status'] == 'Assigned' || lead['status'] == 'New').length;
+    int pendingCount = leads.where((lead) =>
+    lead['status'] == 'Under Review').length;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
@@ -143,8 +306,8 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _buildStatItem('Total', '${leads.length}', Icons.apps, const Color(0xFF667eea)),
-                        _buildStatItem('Active', '2', Icons.trending_up, const Color(0xFF4CAF50)),
-                        _buildStatItem('Pending', '1', Icons.access_time, const Color(0xFFFF9800)),
+                        _buildStatItem('Active', '$activeCount', Icons.trending_up, const Color(0xFF4CAF50)),
+                        _buildStatItem('Pending', '$pendingCount', Icons.access_time, const Color(0xFFFF9800)),
                       ],
                     ),
                   ),
@@ -152,31 +315,49 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
               ),
             ),
 
-            // Applications List
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: Offset(0, 0.3 + (index * 0.1)),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: _controller,
-                        curve: Interval(
-                          (index * 0.1).clamp(0.0, 1.0),
-                          1.0,
-                          curve: Curves.easeOut,
-                        ),
-                      )),
-                      child: _buildLeadCard(context, leads[index], index),
+            // Loading or Error State
+            if (isLoading)
+              const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (errorMessage != null)
+              SliverToBoxAdapter(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 16),
                     ),
-                  );
-                },
-                childCount: leads.length,
+                  ),
+                ),
+              )
+            else
+            // Applications List
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: Offset(0, 0.3 + (index * 0.1)),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: _controller,
+                          curve: Interval(
+                            (index * 0.1).clamp(0.0, 1.0),
+                            1.0,
+                            curve: Curves.easeOut,
+                          ),
+                        )),
+                        child: _buildLeadCard(context, leads[index], index),
+                      ),
+                    );
+                  },
+                  childCount: leads.length,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -244,6 +425,14 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
   }
 
   Widget _buildLeadCard(BuildContext context, Map<String, dynamic> lead, int index) {
+    String formattedDate = '';
+    try {
+      DateTime dateTime = DateTime.parse(lead['lastUpdated']);
+      formattedDate = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+    } catch (e) {
+      formattedDate = 'N/A';
+    }
+
     return Container(
       margin: EdgeInsets.fromLTRB(16, index == 0 ? 8 : 4, 16, 4),
       child: Material(
@@ -279,15 +468,15 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            _getPriorityColor(lead['priority']!).withOpacity(0.2),
-                            _getPriorityColor(lead['priority']!).withOpacity(0.1),
+                            _getStatusColor(lead['status']!).withOpacity(0.2),
+                            _getStatusColor(lead['status']!).withOpacity(0.1),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         lead['icon'] as IconData,
-                        color: _getPriorityColor(lead['priority']!),
+                        color: _getStatusColor(lead['status']!),
                         size: 24,
                       ),
                     ),
@@ -297,7 +486,7 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            lead['product']!,
+                            lead['productType']!,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
@@ -306,7 +495,7 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            lead['amount']!,
+                            'Priority Score: ${lead['priorityScore']}',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -314,24 +503,6 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getPriorityColor(lead['priority']!).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _getPriorityColor(lead['priority']!).withOpacity(0.3),
-                        ),
-                      ),
-                      child: Text(
-                        lead['priority']!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: _getPriorityColor(lead['priority']!),
-                        ),
                       ),
                     ),
                   ],
@@ -367,7 +538,7 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        lead['date']!,
+                        formattedDate,
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade600,
@@ -382,14 +553,6 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
         ),
       ),
     );
-  }
-
-  Color _getPriorityColor(String priority) {
-    return switch (priority) {
-      'High' => const Color(0xFFEF4444),
-      'Medium' => const Color(0xFFFF9800),
-      _ => const Color(0xFF4CAF50),
-    };
   }
 
   Color _getStatusColor(String status) {

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter/material.dart';
-
 class LeadDetailScreen extends StatefulWidget {
   const LeadDetailScreen({super.key});
 
@@ -37,7 +35,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
-    // Timeline animations
+    // Timeline animations - FIXED: Changed from elasticOut to easeOutBack
     _timelineAnimations = List.generate(4, (index) {
       return Tween<double>(begin: 0.0, end: 1.0).animate(
         CurvedAnimation(
@@ -45,7 +43,7 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
           curve: Interval(
             index * 0.2,
             (index * 0.2) + 0.4,
-            curve: Curves.elasticOut,
+            curve: Curves.easeOutBack, // CHANGED: was Curves.elasticOut
           ),
         ),
       );
@@ -79,93 +77,196 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     };
 
     final timeline = [
-      {'title': 'Application Created', 'date': '15 Sep 2025', 'time': '10:30 AM', 'completed': true},
-      {'title': 'Documents Verified', 'date': '16 Sep 2025', 'time': '02:15 PM', 'completed': true},
-      {'title': 'Officer Assigned', 'date': '17 Sep 2025', 'time': '11:00 AM', 'completed': true},
-      {'title': 'Customer Contact', 'date': '26 Sep 2025', 'time': 'Pending', 'completed': false},
+      {
+        'title': 'Application Created',
+        'date': '15 Sep 2025',
+        'time': '10:30 AM',
+        'completed': true
+      },
+      {
+        'title': 'Documents Verified',
+        'date': '16 Sep 2025',
+        'time': '02:15 PM',
+        'completed': true
+      },
+      {
+        'title': 'Officer Assigned',
+        'date': '17 Sep 2025',
+        'time': '11:00 AM',
+        'completed': true
+      },
+      {
+        'title': 'Customer Contact',
+        'date': '26 Sep 2025',
+        'time': 'Pending',
+        'completed': false
+      },
     ];
 
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-      body: CustomScrollView(
-        slivers: [
-          // Modern App Bar with gradient
-          SliverAppBar(
-            expandedHeight: 100,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF667eea),
-                    Color(0xFF764ba2),
-                  ],
-                ),
-              ),
-              child: FlexibleSpaceBar(
-                title: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: const Text(
-                    'Application Details',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20,
-                    ),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            // Modern App Bar with gradient
+            SliverAppBar(
+              expandedHeight: 100,
+              floating: false,
+              pinned: true,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              flexibleSpace: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF667eea),
+                      Color(0xFF764ba2),
+                    ],
                   ),
                 ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                child: FlexibleSpaceBar(
+                  title: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: const Text(
+                      'Application Details',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                      ),
+                    ),
+                  ),
+                  centerTitle: false,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
+                ),
               ),
-            ),
-            leading: Container(
-              margin: const EdgeInsets.only(left: 16, top: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            actions: [
-              Container(
-                margin: const EdgeInsets.only(right: 16, top: 8),
+              leading: Container(
+                margin: const EdgeInsets.only(left: 16, top: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.share_outlined, color: Colors.white),
-                  onPressed: () {},
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
-            ],
-          ),
-
-          // Application Header Card
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
+              actions: [
+                Container(
+                  margin: const EdgeInsets.only(right: 16, top: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.share_outlined, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                ),
+              ],
+            ),
+        
+            // Application Header Card
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: const Icon(
+                                Icons.home_outlined,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    leadData['product']!,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF2D3748),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    leadData['amount']!,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF667eea),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            _buildStatusChip(leadData['status']!),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        _buildInfoRow(
+                            'Application ID', leadData['applicationId']!,
+                            Icons.receipt_long_outlined),
+                        _buildInfoRow('Applied On', leadData['dateApplied']!,
+                            Icons.calendar_today_outlined),
+                        _buildInfoRow('Assigned Officer', leadData['officer']!,
+                            Icons.person_outlined),
+                        _buildInfoRow('Branch', leadData['branch']!,
+                            Icons.location_on_outlined),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        
+            // Timeline Section - FIXED
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
                 child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(24),
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 15,
-                        offset: const Offset(0, 5),
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
@@ -175,330 +276,208 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
+                              color: const Color(0xFF667eea).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(
-                              Icons.home_outlined,
-                              color: Colors.white,
-                              size: 28,
+                              Icons.timeline_outlined,
+                              color: Color(0xFF667eea),
+                              size: 20,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  leadData['product']!,
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFF2D3748),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  leadData['amount']!,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF667eea),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _buildStatusChip(leadData['status']!, leadData['priority']!),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      _buildInfoRow('Application ID', leadData['applicationId']!, Icons.receipt_long_outlined),
-                      _buildInfoRow('Applied On', leadData['dateApplied']!, Icons.calendar_today_outlined),
-                      _buildInfoRow('Assigned Officer', leadData['officer']!, Icons.person_outlined),
-                      _buildInfoRow('Branch', leadData['branch']!, Icons.location_on_outlined),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Timeline Section
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF667eea).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.timeline_outlined,
-                            color: Color(0xFF667eea),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Application Timeline',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3748),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    ...timeline.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final item = entry.value;
-                      return AnimatedBuilder(
-                        animation: _timelineAnimations[index],
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _timelineAnimations[index].value,
-                            alignment: Alignment.centerLeft,
-                            child: Opacity(
-                              opacity: _timelineAnimations[index].value,
-                              child: _buildTimelineItem(
-                                item['title']! as String,
-                                item['date']! as String,
-                                item['time']! as String,
-                                item['completed'] as bool,
-                                index == timeline.length - 1,
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    }).toList(),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Contact & Notes Section
-          SliverToBoxAdapter(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.support_agent_outlined,
-                            color: Color(0xFF4CAF50),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Next Action & Notes',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF2D3748),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF3CD),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFFE69C)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.schedule, color: Color(0xFFFF9800), size: 20),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text(
-                              'Bank officer will call you today between 2:00 PM - 5:00 PM',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF2D3748),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            const Color(0xFF4CAF50).withOpacity(0.1),
-                            const Color(0xFF81C784).withOpacity(0.05),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF4CAF50).withOpacity(0.2)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.phone, color: Color(0xFF4CAF50), size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                leadData['phone']!,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
                           const Text(
-                            'Please keep your documents ready: PAN Card, Salary Slips, Bank Statements',
+                            'Application Timeline',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                               color: Color(0xFF2D3748),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 20),
+                      ...timeline
+                          .asMap()
+                          .entries
+                          .map((entry) {
+                        final index = entry.key;
+                        final item = entry.value;
+                        return AnimatedBuilder(
+                          animation: _timelineAnimations[index],
+                          builder: (context, child) {
+                            // FIXED: Clamp both scale and opacity values
+                            final animValue = _timelineAnimations[index].value
+                                .clamp(0.0, 1.0);
+                            return Transform.scale(
+                              scale: 0.8 + (animValue * 0.2),
+                              // Scale from 0.8 to 1.0
+                              alignment: Alignment.centerLeft,
+                              child: Opacity(
+                                opacity: animValue, // FIXED: Clamped value
+                                child: _buildTimelineItem(
+                                  item['title']! as String,
+                                  item['date']! as String,
+                                  item['time']! as String,
+                                  item['completed'] as bool,
+                                  index == timeline.length - 1,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF667eea).withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
+        
+            // Contact & Notes Section
+            SliverToBoxAdapter(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF4CAF50).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.support_agent_outlined,
+                              color: Color(0xFF4CAF50),
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Text(
+                            'Next Action & Notes',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF2D3748),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF3CD),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFFFE69C)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.schedule, color: Color(0xFFFF9800),
+                                size: 20),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                'Bank officer will call you today between 2:00 PM - 5:00 PM',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xFF2D3748),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF4CAF50).withOpacity(0.1),
+                              const Color(0xFF81C784).withOpacity(0.05),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF4CAF50)
+                              .withOpacity(0.2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, color: Color(0xFF4CAF50),
+                                    size: 18),
+                                const SizedBox(width: 8),
+                                Text(
+                                  leadData['phone']!,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF4CAF50),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Please keep your documents ready: PAN Card, Salary Slips, Bank Statements',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF2D3748),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: FloatingActionButton.extended(
-            onPressed: () {},
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            icon: const Icon(Icons.support_agent, color: Colors.white),
-            label: const Text(
-              'Contact Officer',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildStatusChip(String status, String priority) {
-    Color priorityColor = switch (priority) {
-      'High' => const Color(0xFFEF4444),
-      'Medium' => const Color(0xFFFF9800),
-      _ => const Color(0xFF4CAF50),
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: priorityColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: priorityColor.withOpacity(0.3)),
-          ),
-          child: Text(
-            priority,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: priorityColor,
-            ),
-          ),
+  Widget _buildStatusChip(String status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF2196F3).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+      ),
+      child: Text(
+        status,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF2196F3),
         ),
-        const SizedBox(height: 4),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2196F3).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
-          ),
-          child: Text(
-            status,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2196F3),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -532,7 +511,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
     );
   }
 
-  Widget _buildTimelineItem(String title, String date, String time, bool completed, bool isLast) {
+  Widget _buildTimelineItem(String title, String date, String time,
+      bool completed, bool isLast) {
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 16),
       child: Row(
@@ -544,7 +524,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: completed ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                  color: completed ? const Color(0xFF4CAF50) : Colors.grey
+                      .shade300,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: completed ? [
                     BoxShadow(
@@ -564,7 +545,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                 Container(
                   width: 2,
                   height: 40,
-                  color: completed ? const Color(0xFF4CAF50) : Colors.grey.shade300,
+                  color: completed ? const Color(0xFF4CAF50) : Colors.grey
+                      .shade300,
                   margin: const EdgeInsets.symmetric(vertical: 4),
                 ),
             ],
@@ -574,10 +556,14 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: completed ? const Color(0xFF4CAF50).withOpacity(0.05) : Colors.grey.shade50,
+                color: completed
+                    ? const Color(0xFF4CAF50).withOpacity(0.05)
+                    : Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: completed ? const Color(0xFF4CAF50).withOpacity(0.2) : Colors.grey.shade200,
+                  color: completed
+                      ? const Color(0xFF4CAF50).withOpacity(0.2)
+                      : Colors.grey.shade200,
                 ),
               ),
               child: Column(
@@ -588,7 +574,8 @@ class _LeadDetailScreenState extends State<LeadDetailScreen>
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: completed ? const Color(0xFF2D3748) : Colors.grey.shade600,
+                      color: completed ? const Color(0xFF2D3748) : Colors.grey
+                          .shade600,
                     ),
                   ),
                   const SizedBox(height: 4),
