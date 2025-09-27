@@ -261,9 +261,6 @@ export default function HomePage() {
             </P>
           </div>
           <div className="flex gap-3">
-            <Button asChild size="lg">
-              <Link href="/signup">Create Account</Link>
-            </Button>
             <Button asChild size="lg" variant="secondary">
               <Link href="/login">Sign In</Link>
             </Button>

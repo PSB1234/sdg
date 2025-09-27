@@ -22,60 +22,81 @@ import { P } from "@/components/typography";
 import { NavUser } from "@/components/nav-user";
 import { useEffect } from "react";
 
-const data = {
-  navMain: [
+type NavItem = {
+  title: string;
+  url: string;
+  isActive?: boolean;
+  items?: {
+    title: string;
+    url: string;
+    isActive: boolean;
+  }[];
+};
+
+const getNavDataForRole = (userRoles: string[] = []) => {
+  const isAdmin = userRoles.includes("ADMIN");
+  const isSuperAdmin = userRoles.includes("SUPERADMIN");
+
+  // Base navigation items that all users can see
+  const baseLeadItems = [
+    {
+      title: "My Leads",
+      url: "#",
+      isActive: false,
+    },
+    {
+      title: "Add New Leads",
+      url: "#",
+      isActive: false,
+    },
+  ];
+
+  // Add "All Leads" only for Admin and SuperAdmin
+  if (isAdmin || isSuperAdmin) {
+    baseLeadItems.splice(1, 0, {
+      title: "All Leads",
+      url: "#",
+      isActive: false,
+    });
+  }
+
+  const navMain = [
     {
       title: "Leads",
       url: "#",
-      items: [
-        {
-          title: "My Leads",
-          url: "#",
-          isActive: false,
-        },
-        {
-          title: "All Leads",
-          url: "#",
-          isActive: false,
-        },
-        {
-          title: "Add New Leads",
-          url: "#",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      title: "Ai Insights",
-      url: "#",
-      isActive: false,
-    },
-    {
-      title: "Task",
-      url: "#",
-      isActive: false,
+      items: baseLeadItems,
     },
     {
       title: "Reports",
       url: "#",
       isActive: false,
     },
-    {
-      title: "Lead Distribution ",
-      url: "#",
-      isActive: false,
-    },
-    {
-      title: "Audit Logs",
-      url: "#",
-      isActive: false,
-    },
-    {
-      title: "Help & Support",
-      url: "#",
-      isActive: false,
-    },
-  ],
+  ];
+
+  // Add admin-only sections
+  if (isAdmin || isSuperAdmin) {
+    navMain.push(
+      {
+        title: "Lead Distribution",
+        url: "#",
+        isActive: false,
+      },
+      {
+        title: "Audit Logs",
+        url: "#",
+        isActive: false,
+      },
+    );
+  }
+
+  // Help & Support available to all users
+  navMain.push({
+    title: "Help & Support",
+    url: "#",
+    isActive: false,
+  });
+
+  return { navMain };
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -158,6 +179,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useEffect(() => {
     void getUser();
   }, [getUser]);
+
+  // Get navigation data based on user roles
+  const navData = getNavDataForRole(user?.roles ?? []);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -165,7 +190,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <div>
-                <Link href="/dashboard" className="flex items-center gap-2">
+                <Link
+                  href="/dashboard/leads"
+                  className="flex items-center gap-2"
+                >
                   <Image
                     src="/favicon.ico"
                     width={30}
@@ -186,7 +214,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {data.navMain.map((item) => {
+            {navData.navMain.map((item: NavItem) => {
               const parentSlug = slugify(item.title);
               const isParentActive = sectionParam === parentSlug;
               return (

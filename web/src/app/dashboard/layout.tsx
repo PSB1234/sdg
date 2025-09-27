@@ -81,7 +81,7 @@ export default function DashboardLayout({
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <div>
+            <div className="flex items-center gap-2">
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant="outline">
