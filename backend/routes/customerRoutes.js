@@ -1,10 +1,18 @@
-// routes/customerRoutes.js (New file)
+// routes/customerRoutes.js
 const express = require('express');
 const router = express.Router();
-const { submitLead, getLeadStatus } = require('../controllers/customerController');
+const { submitLead, getLeadStatus, getUserLeads } = require('../controllers/customerController');
 
-// No auth needed for customer routes
+// Submit a new lead
+// POST /api/customer/lead-submit
 router.post('/lead-submit', submitLead);
-router.get('/lead/:id/status', getLeadStatus); // But uses token in query
+
+// Get lead status using ?token=... 
+// GET /api/customer/lead-status?token=abc123
+router.get('/lead-status', getLeadStatus);
+
+// Get all leads for a user by email
+// GET /api/customer/leads?email=example@gmail.com
+router.get('/leads', getUserLeads);
 
 module.exports = router;

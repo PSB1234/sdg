@@ -1,4 +1,129 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ApiService {
+  static const String baseUrl = 'http://10.247.14.235:8080/api';
+
+  static Future<String?> _getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('accessToken');
+  }
+
+  static Map<String, String> _getHeaders(String accessToken) {
+    return {
+      'Authorization': 'Bearer $accessToken',
+      'Content-Type': 'application/json',
+    };
+  }
+
+  static Future<Map<String, dynamic>?> getUserProfile() async {
+    try {
+      final accessToken = await _getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token not found');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: _getHeaders(accessToken),
+      );
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load profile: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching user profile: $e');
+      return null;
+    }
+  }
+
+  static Future<bool> updateUserProfile(Map<String, dynamic> profileData) async {
+    try {
+      final accessToken = await _getAccessToken();
+      if (accessToken == null) {
+        throw Exception('Access token not found');
+      }
+
+      final response = await http.put(
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: _getHeaders(accessToken),
+        body: json.encode(profileData),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error updating user profile: $e');
+      return false;
+    }
+  }
+}
+
+class UserProfile {
+  final String id;
+  final String name;
+  final String email;
+  final int age;
+  final List<String> roles;
+  final bool isActive;
+  final bool isEmailVerified;
+  final int loginAttempts;
+  final String createdAt;
+  final String updatedAt;
+  final List<String> permissions;
+
+  UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.age,
+    required this.roles,
+    required this.isActive,
+    required this.isEmailVerified,
+    required this.loginAttempts,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.permissions,
+  });
+
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final user = json['user'];
+    return UserProfile(
+      id: user['_id'],
+      name: user['name'],
+      email: user['email'],
+      age: user['age'],
+      roles: List<String>.from(user['roles']),
+      isActive: user['isActive'],
+      isEmailVerified: user['isEmailVerified'],
+      loginAttempts: user['loginAttempts'],
+      createdAt: user['createdAt'],
+      updatedAt: user['updatedAt'],
+      permissions: List<String>.from(user['permissions']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user': {
+        '_id': id,
+        'name': name,
+        'email': email,
+        'age': age,
+        'roles': roles,
+        'isActive': isActive,
+        'isEmailVerified': isEmailVerified,
+        'loginAttempts': loginAttempts,
+        'createdAt': createdAt,
+        'updatedAt': updatedAt,
+        'permissions': permissions,
+      }
+    };
+  }
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,14 +135,106 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isEditing = false;
+  bool _isLoading = true;
+  UserProfile? _userProfile;
 
   // Controllers for form fields
-  final _nameController = TextEditingController(text: 'John Doe');
-  final _phoneController = TextEditingController(text: '+91 98765 43210');
-  final _emailController = TextEditingController(text: 'john.doe@email.com');
-  final _addressController = TextEditingController(text: '123 Business District, Mumbai, Maharashtra 400001');
-  final _designationController = TextEditingController(text: 'Senior Relationship Manager');
-  final _employeeIdController = TextEditingController(text: 'EMP001');
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _designationController = TextEditingController();
+  final _employeeIdController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final profileData = await ApiService.getUserProfile();
+      if (profileData != null) {
+        _userProfile = UserProfile.fromJson(profileData);
+        _populateFields();
+      } else {
+        _showErrorSnackBar('Failed to load profile data');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error loading profile: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _populateFields() {
+    if (_userProfile != null) {
+      _nameController.text = _userProfile!.name;
+      _emailController.text = _userProfile!.email;
+      _employeeIdController.text = _userProfile!.id;
+
+      // Set default values for fields not in API response
+      _phoneController.text = '+91 98765 43210'; // Default or fetch from additional API
+      _addressController.text = '123 Business District, Mumbai, Maharashtra 400001'; // Default
+
+      // Map roles to designation (you can customize this logic)
+      if (_userProfile!.roles.isNotEmpty) {
+        _designationController.text = _userProfile!.roles.first.replaceAll('_', ' ').toUpperCase();
+      } else {
+        _designationController.text = 'Employee';
+      }
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState?.validate() != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final updateData = {
+        'name': _nameController.text,
+        'email': _emailController.text,
+        'age': _userProfile?.age ?? 25, // Keep existing age or default
+        // Add other fields as needed by your API
+      };
+
+      final success = await ApiService.updateUserProfile(updateData);
+
+      if (success) {
+        setState(() => _isEditing = false);
+        _showSuccessSnackBar('Profile updated successfully');
+        await _loadUserProfile(); // Reload to get updated data
+      } else {
+        _showErrorSnackBar('Failed to update profile');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error updating profile: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFDC2626),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF10B981),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -38,13 +255,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('My Profile'),
         centerTitle: true,
         actions: [
-          IconButton(
-            onPressed: () => setState(() => _isEditing = !_isEditing),
-            icon: Icon(_isEditing ? Icons.close : Icons.edit_outlined),
-          ),
+          if (!_isLoading)
+            IconButton(
+              onPressed: () => setState(() => _isEditing = !_isEditing),
+              icon: Icon(_isEditing ? Icons.close : Icons.edit_outlined),
+            ),
         ],
       ),
-      body: Form(
+      body: _isLoading
+          ? const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6366F1)),
+        ),
+      )
+          : Form(
         key: _formKey,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -117,12 +341,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981),
+                    color: (_userProfile?.isActive ?? false)
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF6B7280),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white, width: 2),
                   ),
-                  child: const Icon(
-                    Icons.check,
+                  child: Icon(
+                    (_userProfile?.isActive ?? false) ? Icons.check : Icons.pause,
                     size: 12,
                     color: Colors.white,
                   ),
@@ -132,7 +358,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            _nameController.text,
+            _nameController.text.isNotEmpty ? _nameController.text : 'Loading...',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -141,7 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            _designationController.text,
+            _designationController.text.isNotEmpty ? _designationController.text : 'Loading...',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
               fontSize: 16,
@@ -166,7 +392,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'ID: ${_employeeIdController.text}',
+                  'ID: ${_employeeIdController.text.isNotEmpty ? _employeeIdController.text.substring(0, 8) : 'Loading...'}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -176,6 +402,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
+          if (_userProfile?.isEmailVerified == true) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF10B981).withOpacity(0.3)),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.verified_outlined,
+                    color: Colors.white,
+                    size: 14,
+                  ),
+                  SizedBox(width: 4),
+                  Text(
+                    'Verified',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -251,9 +507,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline,
-                color: const Color(0xFF06B6D4),
+                color: Color(0xFF06B6D4),
                 size: 20,
               ),
               const SizedBox(width: 12),
@@ -261,18 +517,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Department: Sales & Marketing',
-                      style: TextStyle(
+                    Text(
+                      'Roles: ${_userProfile?.roles.join(', ') ?? 'N/A'}',
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF0C4A6E),
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Joined: January 2020',
-                      style: TextStyle(
+                    Text(
+                      'Account Status: ${(_userProfile?.isActive ?? false) ? 'Active' : 'Inactive'}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF0C4A6E),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Created: ${_userProfile?.createdAt != null ? DateTime.parse(_userProfile!.createdAt).toString().split(' ')[0] : 'N/A'}',
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF0C4A6E),
                       ),
@@ -306,9 +570,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.settings_outlined,
-                color: const Color(0xFF6366F1),
+                color: Color(0xFF6366F1),
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -335,12 +599,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Notification Preferences',
             subtitle: 'Manage your notification settings',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notification settings opened'),
-                  backgroundColor: Color(0xFF6366F1),
-                ),
-              );
+              _showSuccessSnackBar('Notification settings opened');
             },
           ),
           const SizedBox(height: 16),
@@ -349,12 +608,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Privacy Settings',
             subtitle: 'Control your data privacy',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Privacy settings opened'),
-                  backgroundColor: Color(0xFF6366F1),
-                ),
-              );
+              _showSuccessSnackBar('Privacy settings opened');
             },
           ),
         ],
@@ -377,12 +631,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'subtitle': 'Share your experience',
         'color': const Color(0xFF8B5CF6),
         'onTap': () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Feedback form opened'),
-              backgroundColor: Color(0xFF8B5CF6),
-            ),
-          );
+          _showSuccessSnackBar('Feedback form opened');
         },
       },
       {
@@ -391,12 +640,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'subtitle': 'Rate us on app store',
         'color': const Color(0xFFF59E0B),
         'onTap': () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Redirecting to app store...'),
-              backgroundColor: Color(0xFFF59E0B),
-            ),
-          );
+          _showSuccessSnackBar('Redirecting to app store...');
         },
       },
     ];
@@ -419,9 +663,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.flash_on_outlined,
-                color: const Color(0xFF6366F1),
+                color: Color(0xFF6366F1),
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -616,19 +860,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {
-          if (_formKey.currentState?.validate() == true) {
-            setState(() => _isEditing = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile updated successfully'),
-                backgroundColor: Color(0xFF10B981),
-              ),
-            );
-          }
-        },
-        icon: const Icon(Icons.save_outlined),
-        label: const Text('Save Changes'),
+        onPressed: _isLoading ? null : _saveProfile,
+        icon: _isLoading
+            ? const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        )
+            : const Icon(Icons.save_outlined),
+        label: Text(_isLoading ? 'Saving...' : 'Save Changes'),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6366F1),
           foregroundColor: Colors.white,
@@ -655,9 +898,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
+        const Text(
           'App Version 1.0.0',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
             color: Color(0xFF94A3B8),
           ),
@@ -708,12 +951,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password updated successfully'),
-                    backgroundColor: Color(0xFF10B981),
-                  ),
-                );
+                _showSuccessSnackBar('Password updated successfully');
               },
               child: const Text('Update'),
             ),

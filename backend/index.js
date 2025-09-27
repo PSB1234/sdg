@@ -43,8 +43,12 @@ app.use('/api/auth/profile', getUserProfile);
 app.use('/api/leads', require('./routes/leadRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/customer', require('./routes/customerRoutes'));
-
+try {
+  app.use('/api/customer', require('./routes/customerRoutes'));
+  console.log('Customer routes registered successfully');
+} catch (error) {
+  console.error('Error loading customer routes:', error);
+}
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ 
@@ -55,12 +59,12 @@ app.get('/health', (req, res) => {
 });
 
 // 404 handler
-app.use('/*catchAll', (req, res) => {
-  res.status(404).json({ 
-    message: 'Route not found',
-    path: req.originalUrl
-  });
-});
+// app.use('/*catchAll', (req, res) => {
+//   res.status(404).json({ 
+//     message: 'Route not found',
+//     path: req.originalUrl
+//   });
+// });
 
 // Global error handler 
 app.use((err, req, res, next) => {
@@ -72,9 +76,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  // FIX APPLIED: Changed parentheses to backticks (`) for the template literal
-  console.log(`Server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
+
 
 module.exports = app;

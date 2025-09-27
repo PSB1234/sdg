@@ -66,11 +66,7 @@ const leadSchema = new mongoose.Schema({
     dropOffRisk: { type: Number, min: 0, max: 100 }
   },
   trackingToken: { type: String, unique: true },
-  createdBy: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: function() { return !this.isCustomer; } // required for internal leads only
-  },
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Removed required: true
   isCustomer: { type: Boolean, default: false } // flag to indicate customer lead
 }, { timestamps: true });
 

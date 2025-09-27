@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-
-import 'package:flutter/material.dart';
-
 class TrackLeadsScreen extends StatefulWidget {
   const TrackLeadsScreen({super.key});
 
@@ -121,7 +118,7 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                 ),
               ],
             ),
-        
+
             // Stats Overview Card
             SliverToBoxAdapter(
               child: FadeTransition(
@@ -154,7 +151,7 @@ class _TrackLeadsScreenState extends State<TrackLeadsScreen>
                 ),
               ),
             ),
-        
+
             // Applications List
             SliverList(
               delegate: SliverChildBuilderDelegate(
