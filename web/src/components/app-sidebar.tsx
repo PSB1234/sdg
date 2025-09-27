@@ -1,23 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+"use client";
 import * as React from "react";
 import Image from "next/image";
-import {
-  IconCamera,
-  IconChartBar,
-  IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react";
+import { redirect, usePathname } from "next/navigation";
+
 import {
   Sidebar,
   SidebarContent,
@@ -35,264 +20,144 @@ import {
 import Link from "next/link";
 import { P } from "@/components/typography";
 import { NavUser } from "@/components/nav-user";
+import { useEffect } from "react";
 
-// This is sample data.
 const data = {
   navMain: [
     {
-      title: "Getting Started",
+      title: "Leads",
       url: "#",
       items: [
         {
-          title: "Installation",
+          title: "My Leads",
           url: "#",
+          isActive: false,
         },
         {
-          title: "Project Structure",
+          title: "All Leads",
           url: "#",
+          isActive: false,
+        },
+        {
+          title: "Add New Leads",
+          url: "#",
+          isActive: false,
         },
       ],
     },
     {
-      title: "Building Your Application",
+      title: "Ai Insights",
       url: "#",
-      items: [
-        {
-          title: "Routing",
-          url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
-          url: "#",
-        },
-      ],
+      isActive: false,
     },
     {
-      title: "API Reference",
+      title: "Task",
       url: "#",
-      items: [
-        {
-          title: "Components",
-          url: "#",
-        },
-        {
-          title: "File Conventions",
-          url: "#",
-        },
-        {
-          title: "Functions",
-          url: "#",
-        },
-        {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
-          url: "#",
-        },
-      ],
+      isActive: false,
     },
     {
-      title: "Architecture",
+      title: "Reports",
       url: "#",
-      items: [
-        {
-          title: "Accessibility",
-          url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
-      ],
+      isActive: false,
     },
     {
-      title: "Community",
+      title: "Lead Distribution ",
       url: "#",
-      items: [
-        {
-          title: "Contribution Guide",
-          url: "#",
-        },
-      ],
+      isActive: false,
+    },
+    {
+      title: "Audit Logs",
+      url: "#",
+      isActive: false,
+    },
+    {
+      title: "Help & Support",
+      url: "#",
+      isActive: false,
     },
   ],
 };
-const data2 = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-};
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  // Derive active state from the current pathname
+  const pathname = usePathname();
+  const API_BASE =
+    process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8080/api";
+  // Expect paths like /dashboard, /dashboard/leads, /dashboard/leads/my-leads
+  const [, , sectionParam, viewParam] = (pathname || "/").split("/");
+
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  const [user, setUser] = React.useState<{
+    _id: string;
+    name: string;
+    email: string;
+    age?: number;
+    roles: string[];
+    isActive: boolean;
+    isEmailVerified: boolean;
+    loginAttempts: number;
+    permissions: string[];
+    createdAt: string;
+    updatedAt: string;
+  } | null>(null);
+
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  const getUser = React.useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        redirect("/login");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE}/auth/profile`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        redirect("/login");
+        return;
+      }
+      const userData = (await response.json()) as {
+        user: {
+          _id: string;
+          name: string;
+          email: string;
+          age?: number;
+          roles: string[];
+          isActive: boolean;
+          isEmailVerified: boolean;
+          loginAttempts: number;
+          permissions: string[];
+          createdAt: string;
+          updatedAt: string;
+        };
+      };
+      console.log("Fetched user data:", userData);
+      setUser(userData.user);
+    } catch (error) {
+      console.error("Failed to fetch user:", error);
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      redirect("/login");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [API_BASE]);
+  useEffect(() => {
+    void getUser();
+  }, [getUser]);
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -321,32 +186,56 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
-            {data.navMain.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a href={item.url} className="font-medium">
-                    {item.title}
-                  </a>
-                </SidebarMenuButton>
-                {item.items?.length ? (
-                  <SidebarMenuSub>
-                    {item.items.map((item) => (
-                      <SidebarMenuSubItem key={item.title}>
-                        <SidebarMenuSubButton asChild isActive={item.isActive}>
-                          <a href={item.url}>{item.title}</a>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                ) : null}
-              </SidebarMenuItem>
-            ))}
+            {data.navMain.map((item) => {
+              const parentSlug = slugify(item.title);
+              const isParentActive = sectionParam === parentSlug;
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <Link
+                      className={`font-medium ${isParentActive ? "text-primary" : ""}`}
+                      href={`/dashboard/${parentSlug}`}
+                    >
+                      {item.title}
+                    </Link>
+                  </SidebarMenuButton>
+                  {item.items?.length ? (
+                    <SidebarMenuSub>
+                      {item.items.map((sub) => {
+                        const subSlug = slugify(sub.title);
+                        const isActive =
+                          isParentActive && viewParam === subSlug;
+                        return (
+                          <SidebarMenuSubItem key={sub.title}>
+                            <SidebarMenuSubButton asChild isActive={isActive}>
+                              <Link
+                                href={`/dashboard/${parentSlug}/${subSlug}`}
+                              >
+                                {sub.title}
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        );
+                      })}
+                    </SidebarMenuSub>
+                  ) : null}
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarRail />
       <SidebarFooter>
-        <NavUser user={data2.user} />
+        {!isLoading && user && (
+          <NavUser
+            user={{
+              name: user.name,
+              email: user.email,
+              avatar: "/avatars/default.jpg",
+            }}
+          />
+        )}
       </SidebarFooter>
     </Sidebar>
   );

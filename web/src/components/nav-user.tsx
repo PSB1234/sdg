@@ -4,11 +4,12 @@ import {
   IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
+  IconSettings,
   IconUserCircle,
 } from "@tabler/icons-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,16 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear tokens from localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("refreshToken");
+
+    // Redirect to login page
+    router.push("/login");
+  };
 
   return (
     <SidebarMenu>
@@ -90,8 +101,8 @@ export function NavUser({
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <IconNotification />
-                Notifications
+                <IconSettings />
+                Settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -99,6 +110,7 @@ export function NavUser({
               <Button
                 className="text-destructive-foreground w-full items-center justify-center text-start"
                 variant={"destructive"}
+                onClick={handleLogout}
               >
                 <IconLogout /> Log out
               </Button>
