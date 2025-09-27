@@ -26,9 +26,6 @@ export default function HomePage() {
           <H4>SDG Finance</H4>
         </div>
         <div className="flex gap-3">
-          <Button asChild size="lg">
-            <Link href="/signup">Create Account</Link>
-          </Button>
           <Button asChild size="lg" variant="secondary">
             <Link href="/login">Sign In</Link>
           </Button>
