@@ -1,4 +1,4 @@
-# 🛡️ LeadShield – Secure Role-Based Lead Management with AI-Powered Prioritization
+# 🛡️ SDGFinance – Secure Role-Based Lead Management with AI-Powered Prioritization
 
 ## 🚀 Problem Statement
 Banks face challenges in managing leads across multiple user roles (Processing Centres, Nodal Officers, Higher Authorities) without a unified, secure system.  
@@ -7,7 +7,7 @@ Current processes lack robust role-based permissions, audit logging, and actiona
 ---
 
 ## 💡 Our Solution
-We built **LeadShield**, a **secure role-based lead management system** with:
+We built **SDGFinance**, a **secure role-based lead management system** with:
 - **Customer Mobile App (Flutter)**  
 - **Bank Officials Web Portal (Next.js)**  
 - **Backend (Node.js + Express)** with AI/LLM integration  
