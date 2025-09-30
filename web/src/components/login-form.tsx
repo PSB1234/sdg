@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -95,23 +94,22 @@ export default function LoginForm() {
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="mx-auto max-w-3xl space-y-8 py-10"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <div className="text-destructive text-center text-sm">{error}</div>
+          <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border px-4 py-3 text-center text-sm">
+            {error}
+          </div>
         )}
+
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email Address</FormLabel>
               <FormControl>
-                <Input placeholder="shadcn" type="email" {...field} />
+                <Input placeholder="Enter your email" type="email" {...field} />
               </FormControl>
-              <FormDescription>email</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -124,16 +122,22 @@ export default function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <PasswordInput placeholder="Placeholder" {...field} />
+                <PasswordInput placeholder="Enter your password" {...field} />
               </FormControl>
-              <FormDescription>Enter your password.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Submit"}
+        <Button type="submit" disabled={isLoading} className="w-full" size="lg">
+          {isLoading ? (
+            <div className="flex items-center space-x-2">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>Signing in...</span>
+            </div>
+          ) : (
+            "Sign In"
+          )}
         </Button>
       </form>
     </Form>

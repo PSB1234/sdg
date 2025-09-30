@@ -78,3 +78,96 @@ Our system ensures secure access, lead prioritization, real-time tracking, and a
 - Core banking system integration.  
 - Offline-first support for mobile app.  
 
+// ...existing code...
+
+---
+
+## 🛠️ Setup Instructions
+
+### Prerequisites
+- **Node.js** 
+- **pnpm** 
+- **Flutter** 
+- **MongoDB** 
+- **Git**
+
+### 🚀 Quick Start
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/PSB1234/sdg.git
+cd sdg
+```
+
+#### 2. Backend Setup
+```bash
+cd backend
+pnpm install
+
+# Create environment file
+cp .env.example .env
+# Edit .env with your MongoDB connection string and other configurations
+
+# Start the backend server
+pnpm start
+```
+
+#### 3. Web Application Setup
+```bash
+cd ../web
+pnpm install
+
+# Create environment file
+cp .env.example .env
+# Configure your environment variables (API endpoints, etc.)
+
+# Start the development server
+pnpm dev
+```
+
+#### 4. Mobile Application Setup
+```bash
+cd ../codeishack
+
+# Get Flutter dependencies
+flutter pub get
+
+# For Android
+flutter run
+
+# For iOS (macOS only)
+flutter run -d ios
+```
+
+### 🔧 Development Workflow
+
+1. **Start Backend:** `cd backend && pnpm start`
+2. **Start Web App:** `cd web && pnpm dev`
+3. **Run Mobile App:** `cd codeishack && flutter run`
+
+### 📦 Production Deployment
+
+#### Backend
+```bash
+cd backend
+pnpm build
+pnpm start:prod
+```
+
+#### Web Application
+```bash
+cd web
+pnpm build
+pnpm start
+```
+
+#### Mobile Application
+```bash
+cd codeishack
+flutter build apk --release  # For Android
+flutter build ios --release  # For iOS
+```
+### 📊 Database Setup
+1. Install MongoDB locally or use MongoDB Atlas
+2. Create a database named `sdgfinance`
+3. The application will automatically create required collections on first run
