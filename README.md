@@ -48,7 +48,7 @@ Our system ensures secure access, lead prioritization, real-time tracking, and a
 
 ### Backend
 - **Server:** Node.js + Express  
-- **Database:** MongoDB / PostgreSQL (replace with the one used)  
+- **Database:** MongoDB
 - **Authentication & RBAC:** JWT-based  
 
 ### AI/LLM Integration
