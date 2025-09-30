@@ -72,16 +72,6 @@ Our system ensures secure access, lead prioritization, real-time tracking, and a
 
 ---
 
-## 🔮 Future Scope
-- Multi-language support for customer app.  
-- Advanced ML models for **credit risk prediction**.  
-- Core banking system integration.  
-- Offline-first support for mobile app.  
-
-// ...existing code...
-
----
-
 ## 🛠️ Setup Instructions
 
 ### Prerequisites
@@ -137,6 +127,13 @@ flutter run
 
 # For iOS (macOS only)
 flutter run -d ios
+
+
+# IMPORTANT: Update API endpoints in Flutter code
+# change the base URL to your local backend:
+# Replace existing API URLs with: http://localhost:5000/api
+# Or replace with your backend server IP address 🙇
+
 ```
 
 ### 🔧 Development Workflow
